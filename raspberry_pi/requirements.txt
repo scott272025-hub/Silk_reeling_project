@@ -1,5 +1,6 @@
-opencv-python==4.8.1.78
-pygame==2.5.2
-pyserial==3.5
-gpiozero==2.0
-RPi.GPIO==0.7.1
+opencv-python>=4.10.0.84
+pygame>=2.6.1
+numpy>=1.26.4
+pyserial>=3.5
+gpiozero>=2.0
+RPi.GPIO>=0.7.1
