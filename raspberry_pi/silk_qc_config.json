@@ -1,0 +1,52 @@
+{
+  "camera_index": 0,
+  "camera_width": 640,
+  "camera_height": 480,
+  "target_fps": 12,
+
+  "roi": {
+    "x": 200,
+    "y": 120,
+    "width": 240,
+    "height": 200
+  },
+
+  "image_processing": {
+    "blur_size": 5,
+    "min_contour_area": 180,
+    "morph_kernel_width": 3,
+    "morph_kernel_height": 1,
+    "smooth_window": 5
+  },
+
+  "calibration": {
+    "pixel_to_mm": 0.002,
+    "denier_k": 419.92
+  },
+
+  "quality": {
+    "denier_min": 18.0,
+    "denier_max": 24.0,
+    "bad_frame_limit": 10,
+    "bad_duration_seconds": 5.0,
+    "no_silk_frame_limit": 15,
+    "no_silk_duration_seconds": 5.0
+  },
+
+  "serial": {
+    "port": "/dev/serial0",
+    "baudrate": 115200,
+    "timeout": 0.1
+  },
+
+  "buzzer": {
+    "pin": 18,
+    "duration_seconds": 10
+  },
+
+  "display": {
+    "width": 480,
+    "height": 320,
+    "fullscreen": true
+  }
+}
