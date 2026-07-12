@@ -1,4 +1,4 @@
-# State Machine Constants
+# State Machine Constants (ค่าคงที่สถานะของระบบ)
 STATE_IDLE = "IDLE"
 STATE_READY = "READY"
 STATE_RUNNING = "RUNNING"
@@ -8,12 +8,12 @@ STATE_ALARM = "ALARM"
 STATE_ERROR = "ERROR"
 STATE_CALIBRATING = "CALIBRATING"
 
-# Quality Status Constants
+# Quality Status Constants (ค่าคงที่สถานะคุณภาพเส้นไหม)
 STATUS_PASS = "ผ่าน"
 STATUS_OUT_OF_RANGE = "ออกนอกเกณฑ์"
 STATUS_NO_SILK = "ไม่พบเส้นไหม"
 
-# Stop Reasons
+# Stop Reasons (เหตุผลในการหยุดเครื่อง)
 REASON_TARGET_REACHED = "TARGET_REACHED"
 REASON_NO_SILK = "NO_SILK"
 REASON_OUT_OF_RANGE = "OUT_OF_RANGE"

@@ -4,8 +4,8 @@ from logging.handlers import RotatingFileHandler
 
 def setup_logger(log_dir="logs", log_file="silk_qc.log"):
     """
-    Setup logging configuration that writes to both console and file.
-    Logs are format as specified in the rules:
+    ตั้งค่าระบบการเก็บล็อก (Logging) โดยจะบันทึกทั้งลงในไฟล์และแสดงผลผ่าน Console
+    รูปแบบล็อกเป็นไปตามข้อกำหนด:
     2026-07-12 14:30:10,INFO,MACHINE_START
     """
     if not os.path.exists(log_dir):
@@ -14,16 +14,16 @@ def setup_logger(log_dir="logs", log_file="silk_qc.log"):
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
     
-    # Custom format to match the specification as closely as possible
-    # Specification format: 2026-07-12 14:30:10,INFO,MACHINE_START
+    # รูปแบบล็อกตามที่กำหนด
+    # ตัวอย่าง: 2026-07-12 14:30:10,INFO,MACHINE_START
     formatter = logging.Formatter('%(asctime)s,%(levelname)s,%(message)s', datefmt='%Y-%m-%d %H:%M:%S')
     
-    # File Handler
+    # การบันทึกลงไฟล์ (File Handler) พร้อมระบบหมุนเวียนไฟล์ (Rotating) เพื่อไม่ให้ไฟล์ใหญ่เกินไป
     file_path = os.path.join(log_dir, log_file)
     file_handler = RotatingFileHandler(file_path, maxBytes=5*1024*1024, backupCount=5, encoding='utf-8')
     file_handler.setFormatter(formatter)
     
-    # Console Handler
+    # การแสดงผลออกหน้าจอ (Console Handler)
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
     

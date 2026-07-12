@@ -13,16 +13,15 @@ class ConfigManager:
     def load_config(self):
         try:
             if not os.path.exists(self.config_path):
-                logger.error(f"Config file not found at {self.config_path}")
-                # Create a default if it doesn't exist? (Skipping for now as we have a static file)
+                logger.error(f"ไม่พบไฟล์คอนฟิก (Config file) ที่ตำแหน่ง {self.config_path}")
                 return False
 
             with open(self.config_path, 'r', encoding='utf-8') as f:
                 self.config = json.load(f)
-            logger.info("Configuration loaded successfully.")
+            logger.info("โหลดการตั้งค่าสำเร็จ")
             return True
         except Exception as error:
-            logger.exception(f"Error loading configuration: {error}")
+            logger.exception(f"เกิดข้อผิดพลาดในการโหลดการตั้งค่า: {error}")
             return False
 
     def get(self, section, key=None, default=None):
@@ -36,17 +35,17 @@ class ConfigManager:
             section_data = self.config.get(section, {})
             return section_data.get(key, default)
         except Exception as error:
-            logger.exception(f"Error accessing configuration {section}.{key}: {error}")
+            logger.exception(f"เกิดข้อผิดพลาดในการเข้าถึงการตั้งค่าส่วน {section}.{key}: {error}")
             return default
 
     def save_config(self):
         try:
             with open(self.config_path, 'w', encoding='utf-8') as f:
                 json.dump(self.config, f, indent=2)
-            logger.info("Configuration saved successfully.")
+            logger.info("บันทึกการตั้งค่าสำเร็จ")
             return True
         except Exception as error:
-            logger.exception(f"Error saving configuration: {error}")
+            logger.exception(f"เกิดข้อผิดพลาดในการบันทึกการตั้งค่า: {error}")
             return False
             
     def update(self, section, key, value):

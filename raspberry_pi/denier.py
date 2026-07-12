@@ -16,10 +16,8 @@ class DenierCalculator:
         
     def calculate_denier(self, thickness_px):
         """
-        Calculate Denier from pixel thickness based on calibration constants.
-        Uses the linear equation model: denier = K * thickness_mm
-        or simply K * thickness_px depending on the calibration approach.
-        In this implementation, we use: denier = K * thickness_mm
+        คำนวณค่า Denier จากความหนาหน่วยพิกเซล โดยอิงจากค่าคงที่การสอบเทียบ (Calibration)
+        ใช้สมการเชิงเส้น: denier = K * thickness_mm
         """
         if thickness_px is None or thickness_px <= 0:
             return None, None
@@ -31,8 +29,8 @@ class DenierCalculator:
         
     def evaluate_quality(self, denier):
         """
-        Evaluate if the calculated Denier is within the acceptable range.
-        Returns the status constant string.
+        ประเมินว่าค่า Denier ที่คำนวณได้อยู่ในเกณฑ์คุณภาพที่ยอมรับได้หรือไม่
+        คืนค่ากลับมาเป็นข้อความสถานะที่กำหนดไว้ในค่าคงที่
         """
         if denier is None:
             from constants import STATUS_NO_SILK

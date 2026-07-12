@@ -16,7 +16,7 @@ logger = setup_logger()
 
 class Application:
     def __init__(self):
-        logger.info("Initializing Application...")
+        logger.info("กำลังเริ่มต้นระบบส่วนกลาง...")
         
         self.config_manager = ConfigManager()
         self.config = self.config_manager.config
@@ -39,6 +39,7 @@ class Application:
         self.denier_calc = DenierCalculator(self.config)
         self.buzzer = BuzzerControl(self.config)
         
+        # ฟังก์ชันเมื่อมีการกดปุ่ม
         callbacks = {
             'start': self.cmd_start,
             'stop': self.cmd_stop,
@@ -53,7 +54,7 @@ class Application:
         self.current_count = 0
         self.target_count = 0
         
-        # QC Logic variables
+        # ตัวแปรสำหรับลอจิกควบคุมคุณภาพ (QC Logic)
         qc_conf = self.config.get('quality', {})
         self.bad_frame_limit = qc_conf.get('bad_frame_limit', 10)
         self.bad_duration_seconds = qc_conf.get('bad_duration_seconds', 5.0)
@@ -66,14 +67,14 @@ class Application:
         self.no_silk_start_time = None
 
     def handle_serial_data(self, data):
-        """Parse incoming data from Arduino."""
-        # e.g. STATUS,RUNNING or COUNT,125
+        """ประมวลผลข้อมูลที่ส่งมาจาก Arduino"""
+        # รูปแบบเช่น STATUS,RUNNING หรือ COUNT,125
         parts = data.split(',')
         if len(parts) >= 2:
             key, val = parts[0], parts[1]
             if key == "STATUS":
                 self.machine_state = val
-                logger.info(f"Machine state changed to: {self.machine_state}")
+                logger.info(f"สถานะเครื่องจักรเปลี่ยนเป็น: {self.machine_state}")
             elif key == "COUNT":
                 self.current_count = int(val)
             elif key == "TARGET":
@@ -88,32 +89,32 @@ class Application:
         self.serial_link.send_command(cmd)
 
     def cmd_start(self):
-        logger.info("GUI Action: START")
+        logger.info("คำสั่งจาก GUI: เริ่มทำงาน (START)")
         self.send_serial("START")
         self.buzzer.stop_alarm()
         self.reset_qc_counters()
 
     def cmd_stop(self):
-        logger.info("GUI Action: STOP")
+        logger.info("คำสั่งจาก GUI: หยุด (STOP)")
         self.stop_machine(REASON_MANUAL_STOP)
 
     def cmd_reset(self):
-        logger.info("GUI Action: RESET")
+        logger.info("คำสั่งจาก GUI: รีเซ็ต (RESET)")
         self.send_serial("RESET")
         self.machine_state = STATE_IDLE
         self.reset_qc_counters()
         self.buzzer.stop_alarm()
 
     def cmd_calibrate(self):
-        logger.info("GUI Action: CALIBRATE (Not fully implemented)")
+        logger.info("คำสั่งจาก GUI: สอบเทียบ (CALIBRATE - ยังไม่สมบูรณ์แบบ)")
         pass
 
     def cmd_exit(self):
-        logger.info("GUI Action: EXIT")
+        logger.info("คำสั่งจาก GUI: ออกจากโปรแกรม (EXIT)")
         self.is_running = False
 
     def stop_machine(self, reason):
-        logger.warning(f"Stopping Machine. Reason: {reason}")
+        logger.warning(f"สั่งหยุดเครื่องจักร. เหตุผล: {reason}")
         if reason == REASON_NO_SILK:
             self.send_serial("STOP,NO_SILK")
         elif reason == REASON_OUT_OF_RANGE:
@@ -132,31 +133,31 @@ class Application:
         self.no_silk_start_time = None
 
     def run(self):
-        logger.info("Starting Application Components...")
+        logger.info("เริ่มต้นการทำงานของทุกระบบ...")
         self.serial_link.connect()
         self.camera.start()
         
-        # Main Event Loop
+        # วงจรการทำงานหลัก (Main Event Loop)
         try:
             while self.is_running:
-                # 1. Process GUI events
+                # 1. จัดการเหตุการณ์จาก GUI
                 self.gui.process_events()
                 
-                # 2. Get Camera Frame
+                # 2. รับภาพจากกล้อง
                 frame = self.camera.read()
-                cam_status = "ONLINE" if self.camera.is_healthy() else "ERROR"
+                cam_status = "ออนไลน์" if self.camera.is_healthy() else "มีปัญหา"
                 
-                if cam_status == "ERROR" and self.machine_state == STATE_RUNNING:
+                if cam_status == "มีปัญหา" and self.machine_state == STATE_RUNNING:
                     self.stop_machine(REASON_CAMERA_ERROR)
                 
-                # 3. Process Image
+                # 3. ประมวลผลภาพ
                 display_img, thickness_px = self.image_processor.process_frame(frame)
                 
-                # 4. Calculate Quality
+                # 4. คำนวณค่าคุณภาพ (Denier)
                 thickness_mm, denier = self.denier_calc.calculate_denier(thickness_px)
                 qc_status = self.denier_calc.evaluate_quality(denier)
                 
-                # 5. Check auto-stop conditions if running
+                # 5. ตรวจสอบเงื่อนไขการหยุดเครื่องอัตโนมัติขณะเดินเครื่อง
                 if self.machine_state == STATE_RUNNING:
                     now = time.time()
                     
@@ -187,7 +188,7 @@ class Application:
                     if self.target_count > 0 and self.current_count >= self.target_count:
                         self.stop_machine(REASON_TARGET_REACHED)
                 
-                # 6. Update GUI
+                # 6. อัปเดตข้อมูลบน GUI
                 self.gui.update_state(
                     machine_state=self.machine_state,
                     camera_status=cam_status,
@@ -199,23 +200,23 @@ class Application:
                 )
                 self.gui.draw(display_img)
                 
-                # Sleep briefly to not max out CPU (GUI runs ~30-60 FPS)
+                # หน่วงเวลาเล็กน้อยเพื่อไม่ให้กินทรัพยากร CPU เต็ม 100% (GUI แสดงผลที่ประมาณ 30-60 FPS)
                 time.sleep(0.01)
                 
         except KeyboardInterrupt:
-            logger.info("Application interrupted by user")
+            logger.info("ผู้ใช้สั่งหยุดการทำงานของระบบ")
         except Exception as e:
-            logger.exception(f"Unhandled exception in main loop: {e}")
+            logger.exception(f"เกิดข้อผิดพลาดที่ไม่คาดคิดในวงจรการทำงานหลัก: {e}")
         finally:
             self.cleanup()
 
     def cleanup(self):
-        logger.info("Cleaning up...")
+        logger.info("กำลังทำความสะอาดทรัพยากร (Cleanup)...")
         self.camera.stop()
         self.serial_link.disconnect()
         self.buzzer.stop_alarm()
         self.gui.quit()
-        logger.info("Shutdown complete.")
+        logger.info("ปิดระบบสมบูรณ์")
 
 if __name__ == "__main__":
     app = Application()

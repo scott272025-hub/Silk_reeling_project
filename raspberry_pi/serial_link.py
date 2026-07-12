@@ -14,19 +14,20 @@ class SerialLink:
         self.is_running = False
         self.receive_thread = None
         
-        # Callbacks for received data
+        # ฟังก์ชัน Callback เมื่อได้รับข้อมูล
         self.on_data_received = None
         
     def connect(self):
         try:
             self.ser = serial.Serial(self.port, self.baudrate, timeout=self.timeout)
-            logger.info(f"Connected to Arduino on {self.port} at {self.baudrate}")
+            logger.info(f"เชื่อมต่อกับ Arduino ทางพอร์ต {self.port} ที่ {self.baudrate} baud สำเร็จ")
             self.is_running = True
+            # ใช้ Thread แบบ Non-blocking เพื่อรอรับข้อมูล
             self.receive_thread = threading.Thread(target=self._receive_loop, daemon=True)
             self.receive_thread.start()
             return True
         except serial.SerialException as e:
-            logger.error(f"Failed to connect to Arduino: {e}")
+            logger.error(f"ไม่สามารถเชื่อมต่อกับ Arduino ได้: {e}")
             return False
             
     def disconnect(self):
@@ -35,20 +36,19 @@ class SerialLink:
             self.receive_thread.join(timeout=1.0)
         if self.ser and self.ser.is_open:
             self.ser.close()
-            logger.info("Disconnected from Arduino")
+            logger.info("ยกเลิกการเชื่อมต่อกับ Arduino แล้ว")
             
     def send_command(self, cmd):
         if self.ser and self.ser.is_open:
             try:
                 full_cmd = f"{cmd}\n".encode('utf-8')
                 self.ser.write(full_cmd)
-                # logger.info(f"Sent: {cmd}")
                 return True
             except Exception as e:
-                logger.error(f"Error sending command: {e}")
+                logger.error(f"เกิดข้อผิดพลาดในการส่งคำสั่ง: {e}")
                 return False
         else:
-            logger.warning(f"Cannot send '{cmd}', serial is not connected")
+            logger.warning(f"ไม่สามารถส่งคำสั่ง '{cmd}' ได้ เนื่องจากการเชื่อมต่อขาดหาย")
             return False
             
     def _receive_loop(self):
@@ -60,7 +60,7 @@ class SerialLink:
                         if line and self.on_data_received:
                             self.on_data_received(line)
                 except Exception as e:
-                    logger.error(f"Error reading from serial: {e}")
-                    time.sleep(1) # Prevent tight loop on error
+                    logger.error(f"ข้อผิดพลาดขณะอ่านข้อมูลจากพอร์ต: {e}")
+                    time.sleep(1) # ป้องกันการวนลูปถี่เกินไปเมื่อเกิดข้อผิดพลาด
             else:
                 time.sleep(0.1)

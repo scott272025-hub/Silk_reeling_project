@@ -1,38 +1,39 @@
-# Silk Reeling Machine & Quality Control System
+# โครงการพัฒนาระบบเครื่องสาวไหมและตรวจสอบคุณภาพเส้นไหมกึ่งอัตโนมัติ
 
-This repository contains the software for a semi-automated silk reeling machine equipped with an image-processing-based silk quality inspection system.
+โปรเจกต์นี้ประกอบด้วยซอฟต์แวร์สำหรับเครื่องสาวไหมกึ่งอัตโนมัติ ซึ่งมีระบบตรวจสอบคุณภาพเส้นไหม (การคำนวณดีเนียร์) ด้วยเทคโนโลยีประมวลผลภาพ (Image Processing)
 
-## Architecture
+## โครงสร้างระบบ
 
-The system is composed of two primary computational units:
-1.  **Arduino UNO R3**: Manages real-time hardware interaction, including reading the 4x4 Keypad, Hall Sensor inputs via Pin Change Interrupts, driving TM1637 7-segment displays, and toggling relays for the motor.
-2.  **Raspberry Pi Zero 2 W**: Runs a Python application using OpenCV to process a live feed from a USB Digital Microscope. It measures silk thickness, calculates the Denier value, and coordinates with the Arduino over a serial connection. It also provides a graphical user interface (GUI) on a 3.5-inch TFT display via Pygame.
+ระบบประกอบด้วยหน่วยประมวลผลหลัก 2 ส่วน:
+1.  **Arduino UNO R3**: จัดการการควบคุมฮาร์ดแวร์แบบเรียลไทม์ ซึ่งรวมถึงการอ่านค่าจากแป้นพิมพ์ (Keypad) 4x4, การนับรอบเพลาผ่าน Hall Sensor ด้วยระบบขัดจังหวะ (Pin Change Interrupts), การแสดงผลจำนวนรอบบนจอ TM1637 (7-segment), และการสั่งงานรีเลย์เพื่อควบคุมมอเตอร์
+2.  **Raspberry Pi Zero 2 W**: รันแอปพลิเคชัน Python โดยใช้ OpenCV สำหรับรับภาพสดจากกล้องดิจิทัลไมโครสโคป USB ทำการวัดขนาดความหนาของเส้นไหม, คำนวณค่า Denier และสื่อสารกับ Arduino เพื่อสั่งการผ่านทาง Serial นอกจากนี้ยังแสดงผลกราฟิก (GUI) บนจอสัมผัส TFT 3.5 นิ้ว ผ่านไลบรารี Pygame
 
-## Directory Structure
+## โครงสร้างโฟลเดอร์
 
-*   `arduino/`: Contains the Arduino sketch (`silk_reeling_controller.ino`).
-*   `raspberry_pi/`: Contains the Python source code, configuration files, and requirements.
+*   `arduino/`: โค้ดต้นฉบับภาษา C++ สำหรับบอร์ด Arduino (`silk_reeling_controller.ino`)
+*   `raspberry_pi/`: โค้ด Python สำหรับประมวลผลภาพ, ไฟล์ตั้งค่า, และรายการไลบรารีที่ต้องใช้
+*   `tests/`: โค้ดสำหรับรัน Unit Test ทดสอบความถูกต้องของโมดูลต่างๆ
 
-## Setup Instructions
+## คำแนะนำการติดตั้ง (Setup Instructions)
 
-### Arduino Setup
-1.  Open `arduino/silk_reeling_controller/silk_reeling_controller.ino` in the Arduino IDE.
-2.  Ensure you have installed the `Keypad` and `TM1637` libraries via the Library Manager.
-3.  Upload the sketch to your Arduino UNO R3. Note: The spec defines A6/A7 for keypad columns. If using a standard UNO R3 DIP, these pins might not be exposed. Adjust the pin definitions at the top of the file if necessary.
+### การตั้งค่าฝั่ง Arduino
+1.  เปิดไฟล์ `arduino/silk_reeling_controller/silk_reeling_controller.ino` ด้วยโปรแกรม Arduino IDE
+2.  ตรวจสอบให้แน่ใจว่าได้ติดตั้งไลบรารี `Keypad` และ `TM1637` ผ่านทาง Library Manager แล้ว
+3.  อัปโหลดโค้ดลงบอร์ด Arduino UNO R3 (หมายเหตุ: หากบอร์ดของคุณไม่มีขา A6/A7 สำหรับการเสียบสาย กรุณาปรับเปลี่ยนการตั้งค่าขา Pin บริเวณส่วนบนของโค้ดให้ตรงกับที่คุณใช้งาน)
 
-### Raspberry Pi Setup
-1.  Install the required dependencies using pip:
+### การตั้งค่าฝั่ง Raspberry Pi
+1.  ติดตั้งไลบรารีและ Dependencies ต่างๆ ที่จำเป็นด้วยคำสั่ง:
     ```bash
     pip3 install -r raspberry_pi/requirements.txt
     ```
-2.  Review `raspberry_pi/silk_qc_config.json` to adjust calibration values, ROI (Region of Interest), and camera indices according to your physical setup.
-3.  Run the application:
+2.  ตรวจสอบและปรับแก้ไฟล์ `raspberry_pi/silk_qc_config.json` เพื่อตั้งค่าการสอบเทียบ (Calibration), กำหนดขอบเขตภาพ (ROI), และตั้งค่าดัชนีของกล้อง (Camera index) ให้ตรงกับฮาร์ดแวร์ของคุณ
+3.  เรียกใช้งานแอปพลิเคชัน:
     ```bash
     python3 raspberry_pi/main.py
     ```
 
-## Serial Communication Protocol
-The system uses a 115200 baud UART connection via a Logic Level Shifter to protect the 3.3V Raspberry Pi from the 5V Arduino signals.
+## โปรโตคอลการสื่อสาร (Serial Communication Protocol)
+ระบบใช้ความเร็ว 115200 baud ในการสื่อสารผ่าน UART และใช้ Logic Level Shifter เป็นตัวกลางเพื่อป้องกันความเสียหายของบอร์ด Raspberry Pi (3.3V) จากสัญญาณ 5V ของ Arduino
 
-*   **Arduino -> RPi**: `STATUS,RUNNING`, `COUNT,125`, `TARGET_REACHED`
-*   **RPi -> Arduino**: `START`, `STOP`, `RESET`, `STOP,NO_SILK`
+*   **จาก Arduino ส่งไป RPi**: `STATUS,RUNNING`, `COUNT,125`, `TARGET_REACHED`
+*   **จาก RPi ส่งไป Arduino**: `START`, `STOP`, `RESET`, `STOP,NO_SILK`

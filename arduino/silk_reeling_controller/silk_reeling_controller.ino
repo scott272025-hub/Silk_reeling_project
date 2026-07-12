@@ -1,21 +1,21 @@
 #include <Keypad.h>
 #include <TM1637Display.h>
 
-// --- PIN DEFINITIONS ---
+// --- การกำหนดขา (PIN DEFINITIONS) ---
 const int RELAY_PIN = 7;
 const int HALL_PIN = 5;
 
-// TM1637 Display 1 (Current Count)
+// หน้าจอ TM1637 ตัวที่ 1 (แสดงจำนวนรอบปัจจุบัน)
 const int TM1637_1_CLK = 4;
 const int TM1637_1_DIO = 6;
 TM1637Display display1(TM1637_1_CLK, TM1637_1_DIO);
 
-// TM1637 Display 2 (Target Count)
+// หน้าจอ TM1637 ตัวที่ 2 (แสดงจำนวนรอบเป้าหมาย)
 const int TM1637_2_CLK = 9;
 const int TM1637_2_DIO = 10;
 TM1637Display display2(TM1637_2_CLK, TM1637_2_DIO);
 
-// Keypad
+// แป้นพิมพ์ (Keypad)
 const byte ROWS = 4;
 const byte COLS = 4;
 char keys[ROWS][COLS] = {
@@ -25,19 +25,19 @@ char keys[ROWS][COLS] = {
   {'*','0','#','D'}
 };
 
-// Using A0-A3 for Rows, A4-A7 for Cols (A6, A7 may need change depending on board)
+// ใช้ A0-A3 สำหรับแถว, A4-A7 สำหรับคอลัมน์ (A6, A7 อาจต้องปรับเปลี่ยนตามบอร์ดที่ใช้)
 byte rowPins[ROWS] = {A0, A1, A2, A3};
 byte colPins[COLS] = {A4, A5, A6, A7}; 
 Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
 
-// --- VARIABLES ---
-volatile long currentCount = 0;
-long targetCount = 0;
-String inputString = "";
-bool isRunning = false;
-bool emergencyStop = false;
+// --- ตัวแปร (VARIABLES) ---
+volatile long currentCount = 0; // จำนวนรอบปัจจุบัน
+long targetCount = 0;           // จำนวนรอบเป้าหมาย
+String inputString = "";        // ข้อความรับค่าจากแป้นพิมพ์
+bool isRunning = false;         // สถานะเครื่องกำลังทำงาน
+bool emergencyStop = false;     // สถานะหยุดฉุกเฉิน
 unsigned long lastSerialTime = 0;
-const int SERIAL_INTERVAL = 500; // ms
+const int SERIAL_INTERVAL = 500; // มิลลิวินาทีสำหรับการส่งข้อมูลสถานะ
 
 void setup() {
   Serial.begin(115200);
@@ -46,31 +46,27 @@ void setup() {
   digitalWrite(RELAY_PIN, LOW);
   
   pinMode(HALL_PIN, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(HALL_PIN), countPulse, FALLING); // Use pin 2 or 3 for hardware interrupt on UNO
-  // Note: Pin 5 is NOT an external interrupt pin on Arduino UNO.
-  // We need to use Pin 2 or Pin 3. We will stick to the spec but handle it via Pin Change Interrupt if possible
-  // For simplicity, we will check pin state in loop if attachInterrupt fails, but UNO only supports INT0/1 on pins 2, 3.
-  // Wait, the specification says HALL_PIN = 5. I will implement polling or Pin Change Interrupt.
-  // Let's use polling for pin 5 since it's not a standard external interrupt on UNO.
-  // (Actually, let's just do standard polling in the loop for now to be safe with Pin 5, or setup PCINT)
   
-  // For PCINT on Pin 5 (PCINT21 / PORTD 5)
-  PCICR |= B00000100;  // Enable PCIE2
-  PCMSK2 |= B00100000; // Enable PCINT21 (Pin 5)
+  // สำหรับ Arduino UNO การทำ Pin Change Interrupt บนขา 5 (PCINT21 / PORTD 5)
+  // เพื่อให้อ่านค่าจาก Hall Sensor ได้อย่างแม่นยำ
+  PCICR |= B00000100;  // เปิดใช้งาน PCIE2
+  PCMSK2 |= B00100000; // เปิดใช้งาน PCINT21 (ขา 5)
   
+  // ตั้งค่าความสว่างหน้าจอ
   display1.setBrightness(0x0f);
   display2.setBrightness(0x0f);
   
+  // แสดงค่าเริ่มต้นเป็น 0
   display1.showNumberDec(currentCount);
   display2.showNumberDec(targetCount);
 }
 
-// ISR for Pin Change Interrupt on Port D (Pins 0-7)
+// ฟังก์ชัน Interrupt (ISR) สำหรับตรวจจับสัญญาณจาก Hall Sensor
 ISR(PCINT2_vect) {
   static bool lastState = HIGH;
   bool currentState = digitalRead(HALL_PIN);
   if (lastState == HIGH && currentState == LOW) {
-    // Falling edge detected
+    // ตรวจจับขอบขาลง (Falling edge) แสดงว่าแม่เหล็กผ่านเซ็นเซอร์
     if (isRunning) {
       currentCount++;
     }
@@ -78,36 +74,25 @@ ISR(PCINT2_vect) {
   lastState = currentState;
 }
 
-void countPulse() {
-  // If pin 2 or 3 was used
-  if (isRunning) {
-    currentCount++;
-  }
-}
-
 void loop() {
-  handleKeypad();
-  handleSerial();
-  checkTarget();
-  sendStatus();
+  handleKeypad();    // ตรวจสอบการกดปุ่ม
+  handleSerial();    // ตรวจสอบคำสั่งที่ได้รับจาก Raspberry Pi
+  checkTarget();     // ตรวจสอบว่าถึงจำนวนรอบเป้าหมายหรือยัง
+  sendStatus();      // ส่งสถานะปัจจุบันกลับไปให้ Raspberry Pi
 }
 
 void startMachine() {
   if (!emergencyStop) {
     isRunning = true;
-    digitalWrite(RELAY_PIN, HIGH);
+    digitalWrite(RELAY_PIN, HIGH); // เปิดรีเลย์มอเตอร์
     Serial.println("STATUS,RUNNING");
   }
 }
 
 void stopMachine(String reason = "") {
   isRunning = false;
-  digitalWrite(RELAY_PIN, LOW);
-  if (reason != "") {
-    Serial.println("STATUS,STOPPED");
-  } else {
-    Serial.println("STATUS,STOPPED");
-  }
+  digitalWrite(RELAY_PIN, LOW); // ปิดรีเลย์มอเตอร์
+  Serial.println("STATUS,STOPPED");
 }
 
 void handleKeypad() {
@@ -117,6 +102,7 @@ void handleKeypad() {
       inputString += key;
       display2.showNumberDec(inputString.toInt());
     } else if (key == '*') {
+      // ลบตัวเลขล่าสุด
       if (inputString.length() > 0) {
         inputString.remove(inputString.length() - 1);
         display2.showNumberDec(inputString.toInt());
@@ -124,6 +110,7 @@ void handleKeypad() {
         display2.showNumberDec(targetCount);
       }
     } else if (key == '#') {
+      // ยืนยันจำนวนรอบเป้าหมาย
       if (inputString.length() > 0) {
         targetCount = inputString.toInt();
         inputString = "";
@@ -132,16 +119,18 @@ void handleKeypad() {
         Serial.println(targetCount);
       }
     } else if (key == 'A') {
+      // เริ่มหรือหยุดการทำงาน
       if (isRunning) {
         stopMachine();
       } else {
         startMachine();
       }
     } else if (key == 'B') {
+      // ล้างค่าที่ป้อนเข้ามา
       inputString = "";
       display2.showNumberDec(targetCount);
     } else if (key == 'D') {
-      // Reset
+      // รีเซ็ตค่าทั้งหมด
       stopMachine();
       currentCount = 0;
       targetCount = 0;
@@ -160,7 +149,7 @@ void handleSerial() {
     if (cmd == "START") {
       startMachine();
     } else if (cmd.startsWith("STOP")) {
-      stopMachine(cmd); // Can be STOP,NO_SILK, etc.
+      stopMachine(cmd); // รับค่าเช่น STOP,NO_SILK เป็นต้น
     } else if (cmd == "RESET") {
       stopMachine();
       currentCount = 0;
@@ -173,6 +162,7 @@ void handleSerial() {
 }
 
 void checkTarget() {
+  // หากจำนวนรอบที่นับได้เท่ากับหรือมากกว่าเป้าหมาย ให้สั่งหยุดเครื่องอัตโนมัติ
   if (isRunning && targetCount > 0 && currentCount >= targetCount) {
     stopMachine("TARGET_REACHED");
     Serial.println("TARGET_REACHED");
@@ -180,6 +170,7 @@ void checkTarget() {
 }
 
 void sendStatus() {
+  // อัปเดตหน้าจอ TM1637 และส่งค่าทาง Serial ทุกๆ 500 ms
   if (millis() - lastSerialTime >= SERIAL_INTERVAL) {
     lastSerialTime = millis();
     display1.showNumberDec(currentCount);

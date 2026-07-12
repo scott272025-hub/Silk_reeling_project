@@ -3,7 +3,7 @@ import threading
 import time
 import os
 
-# Use gpiozero if available, otherwise mock it for testing on non-Pi systems
+# ใช้ gpiozero หากมีบนระบบ มิฉะนั้นให้จำลองการทำงานไว้สำหรับการทดสอบบนคอมพิวเตอร์ทั่วไป
 try:
     if os.name != 'nt':
         from gpiozero import Buzzer
@@ -29,33 +29,33 @@ class BuzzerControl:
         if GPIO_AVAILABLE:
             try:
                 self.buzzer = Buzzer(self.pin)
-                logger.info(f"Buzzer initialized on GPIO pin {self.pin}")
+                logger.info(f"เริ่มต้นการทำงานของ Buzzer บนขา GPIO {self.pin}")
             except Exception as e:
-                logger.error(f"Failed to initialize buzzer: {e}")
+                logger.error(f"เกิดข้อผิดพลาดในการเริ่มต้น Buzzer: {e}")
         else:
-            logger.warning(f"GPIO not available. Buzzer on pin {self.pin} will be mocked.")
+            logger.warning(f"ไม่มีระบบ GPIO บนเครื่องนี้ การทำงานของ Buzzer บนขา {self.pin} จะถูกจำลองขึ้นแทน")
             
     def play_alarm(self):
-        """Play alarm for the configured duration using a non-blocking timer."""
+        """ส่งเสียงเตือนตามระยะเวลาที่กำหนด โดยใช้ Timer แบบ Non-blocking"""
         if self.is_sounding:
-            # Already sounding, maybe extend time? For now, ignore.
+            # หากกำลังส่งเสียงอยู่แล้ว ให้ละเว้นคำสั่งนี้
             return
             
         self.is_sounding = True
-        logger.info("Buzzer ON")
+        logger.info("Buzzer: เปิดเสียง (ON)")
         if self.buzzer:
             self.buzzer.on()
             
-        # Stop automatically after duration
+        # สั่งให้หยุดเสียงอัตโนมัติเมื่อครบกำหนดเวลา
         self.timer = threading.Timer(self.duration, self.stop_alarm)
         self.timer.start()
         
     def stop_alarm(self):
-        """Stop the alarm manually or via timer."""
+        """หยุดเสียงเตือนทันที"""
         if self.timer and self.timer.is_alive():
             self.timer.cancel()
             
         self.is_sounding = False
-        logger.info("Buzzer OFF")
+        logger.info("Buzzer: ปิดเสียง (OFF)")
         if self.buzzer:
             self.buzzer.off()
