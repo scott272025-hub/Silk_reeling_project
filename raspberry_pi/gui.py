@@ -86,11 +86,11 @@ class GUI:
         button_h = 40
         spacing = (self.width - (button_w * 5)) // 6
         
-        self.buttons.append(Button((spacing, button_y, button_w, button_h), "เริ่ม (START)", GREEN, LIGHT_GRAY, self.callbacks.get('start', lambda: None)))
-        self.buttons.append(Button((spacing*2 + button_w, button_y, button_w, button_h), "หยุด (STOP)", RED, LIGHT_GRAY, self.callbacks.get('stop', lambda: None)))
-        self.buttons.append(Button((spacing*3 + button_w*2, button_y, button_w, button_h), "รีเซ็ต (RESET)", YELLOW, LIGHT_GRAY, self.callbacks.get('reset', lambda: None)))
+        self.buttons.append(Button((spacing, button_y, button_w, button_h), "เริ่ม", GREEN, LIGHT_GRAY, self.callbacks.get('start', lambda: None)))
+        self.buttons.append(Button((spacing*2 + button_w, button_y, button_w, button_h), "หยุด", RED, LIGHT_GRAY, self.callbacks.get('stop', lambda: None)))
+        self.buttons.append(Button((spacing*3 + button_w*2, button_y, button_w, button_h), "รีเซ็ต", YELLOW, LIGHT_GRAY, self.callbacks.get('reset', lambda: None)))
         self.buttons.append(Button((spacing*4 + button_w*3, button_y, button_w, button_h), "สอบเทียบ", LIGHT_GRAY, WHITE, self.callbacks.get('calibrate', lambda: None)))
-        self.buttons.append(Button((spacing*5 + button_w*4, button_y, button_w, button_h), "ออก (EXIT)", GRAY, WHITE, self.callbacks.get('exit', lambda: None)))
+        self.buttons.append(Button((spacing*5 + button_w*4, button_y, button_w, button_h), "ออก", GRAY, WHITE, self.callbacks.get('exit', lambda: None)))
 
     def update_state(self, **kwargs):
         for k, v in kwargs.items():

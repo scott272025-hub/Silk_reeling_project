@@ -24,7 +24,7 @@ Development of Innovative Silk Reeling and Silk Quality Inspection Machines Usin
 
 1. ควบคุมการเริ่มและหยุดเครื่องสาวไหม
 2. กำหนดจำนวนรอบเป้าหมายผ่าน Keypad 4×4
-3. นับจำนวนรอบของเพลาหรือหลอดม้วนไหมด้วย Hall Sensor
+3. นับจำนวนรอบด้วย proximity sensor
 4. แสดงจำนวนรอบผ่านจอ TM1637
 5. ตรวจจับเส้นไหมด้วยกล้อง USB Microscope แบบเรียลไทม์
 6. วัดความหนาของเส้นไหมจากภาพ
@@ -744,11 +744,11 @@ CALIBRATING
 ### การเปลี่ยน State
 
 ```text
-IDLE → READY
-READY → RUNNING
+IDLE → พร้อม
+READY → กำลังทำงาน
 RUNNING → STOPPING
 STOPPING → STOPPED
 RUNNING → ALARM
 ALARM → STOPPED
-ANY STATE → ERROR
+ANY STATE → เกิดข้อผิดพลาด
 ERROR → IDLE หลัง Reset สำเ
