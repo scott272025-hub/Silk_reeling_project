@@ -6,7 +6,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../raspberry_pi')))
 
 from main import Application
-from constants import *
+from constants import STATE_IDLE, REASON_TARGET_REACHED, REASON_EMERGENCY_STOP
 
 class MockConfigManager:
     def __init__(self):
